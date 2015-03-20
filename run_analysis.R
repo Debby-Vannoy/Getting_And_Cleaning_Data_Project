@@ -34,37 +34,34 @@ features<- rbind(featuresTrain, featuresTest)
 ##set names to variables
 names(subject)<-c("subject")
 names(activity)<- c("activity")
-featuresNames <- read.table(file.path(path, "features.txt"),head=FALSE)
-names(features)<- featuresNames$V2
+featureHeadings <- read.table(file.path(path, "features.txt"),head=FALSE)
+names(features)<- featureHeadings$V2  ## just take the column with the headings
 
 ##Merge columns to get the data frame Data for all data
-combine <- cbind(subject, activity)
-data <- cbind(features, combine)
+df <- cbind(features,subject, activity)
+
 
 ##2. Extracts only the measurements on the mean and standard deviation for each measurement
 ##Subset Name of Features by measurements on the mean and standard deviation
-## i.e taken Names of Features with "mean()" or "std()"
-subdataFeaturesNames<-featuresNames$V2[grep("mean\\(\\)|std\\(\\)", featuresNames$V2)]
+measurementsDF<-featureHeadings$V2[grep("mean\\(\\)|std\\(\\)", featureHeadings$V2)]
 
-##Subset the data frame Data by seleted names of Features
-selectedNames<-c(as.character(subdataFeaturesNames), "subject", "activity" )
-data<-subset(data,select=selectedNames)
+##Pull the columns of activity and subject data
+subsetHeadings<-c(as.character(measurementsDF), "subject", "activity" )
+df<-subset(df,select=subsetHeadings)
 
 ##Uses descriptive activity names to name the activities in the data set
-##Read descriptive activity names from "activity_labels.txt"
-activityLabels <- read.table(file.path(path, "activity_labels.txt"),header = FALSE)
+currentActivityLabels <- read.table(file.path(path, "activity_labels.txt"),header = FALSE)
 
 ##Features will labelled using descriptive variable names.
-names(data)<-gsub("^t", "time", names(data))
-names(data)<-gsub("^f", "frequency", names(data))
-names(data)<-gsub("Acc", "Accelerometer", names(data))
-names(data)<-gsub("Gyro", "Gyroscope", names(data))
-names(data)<-gsub("Mag", "Magnitude", names(data))
-names(data)<-gsub("BodyBody", "Body", names(data))
+
+names(df)<-gsub("^t", "time", names(df))
+names(df)<-gsub("^f", "frequency", names(df))
+names(df)<-gsub("Acc", "Accelerometer", names(df))
+names(df)<-gsub("Gyro", "Gyroscope", names(df))
+names(df)<-gsub("Mag", "Magnitude", names(df))
+names(df)<-gsub("BodyBody", "Body", names(df))
 
 ## Creates a second,independent tidy data set and ouput it
-## In this part,a data set will be created with the average of each variable for each activity and each subject based on the data set in step 4.
-dt <- data.table(data)
-#This takes the mean of every column broken down by participants and activities
-data2 <- dt[, lapply(.SD, mean), by = 'subject,activity']
-write.table(data2, file = "tidy_data.txt", row.names = FALSE)
+tidy_dt <- data.table(df)
+tidy_dt <- tidy_dt[, lapply(.SD, mean), by = 'subject,activity']
+write.table(tidy_dt, file = "tidy_data.txt", row.names = FALSE)
